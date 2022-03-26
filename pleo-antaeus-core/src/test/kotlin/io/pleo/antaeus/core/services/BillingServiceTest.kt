@@ -7,7 +7,8 @@ import io.pleo.antaeus.core.exceptions.CustomerNotFoundException
 import io.pleo.antaeus.core.exceptions.NetworkException
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.models.*
-import org.junit.jupiter.api.Assertions.*
+import io.pleo.antaeus.models.events.EventPublisher
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -22,7 +23,9 @@ class BillingServiceTest {
     }
     private val invoiceService = mockk<InvoiceService>()
 
-    private val billingService = BillingService(paymentProvider, customerService, invoiceService)
+    private val eventBus = mockk<EventPublisher>(relaxed = true)
+
+    private val billingService = BillingService(paymentProvider, customerService, invoiceService, eventBus)
 
     @Test
     fun `If user exists and payment is successful we should update the invoice with status PAID`() {
