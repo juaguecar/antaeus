@@ -8,6 +8,7 @@
 package io.pleo.antaeus.app
 
 import getPaymentProvider
+import io.pleo.antaeus.core.events.kafka.KafkaEventPublisher
 import io.pleo.antaeus.core.schedule.Scheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
@@ -61,14 +62,22 @@ fun main() {
     val invoiceService = InvoiceService(dal = dal)
     val customerService = CustomerService(dal = dal)
 
+    //KafkaEventBus to publish domain events
+    val eventPublisher = KafkaEventPublisher()
+
     // This is _your_ billing service to be included where you see fit
-    val billingService = BillingService(paymentProvider, customerService, invoiceService)
+    val billingService = BillingService(paymentProvider, customerService, invoiceService, eventPublisher)
+
+    val scheduler = Scheduler(invoiceService, billingService)
+
+    //Start scheduling
+    scheduler.startScheduled()
 
     // Create REST web service
     AntaeusRest(
         invoiceService = invoiceService,
-        customerService = customerService
+        customerService = customerService,
+        billingService = billingService,
+        scheduler = scheduler
     ).run()
-
-    Scheduler(invoiceService, billingService).start()
 }
