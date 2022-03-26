@@ -55,7 +55,7 @@ class BillingService(
 
     private fun payInvoice(invoice: Invoice): Invoice {
         var retries = 0
-        for (i in 1..MAX_RETRIES) {
+        while(retries < MAX_RETRIES) {
             try {
                 val result = when (paymentProvider.charge(invoice)) {
                     true -> updateInvoiceStatus(invoice, InvoiceStatus.PAID)
@@ -81,7 +81,7 @@ class BillingService(
         return invoiceService.update(result)
     }
 
-    private fun updateInvoiceStatus(invoice: Invoice, newStatus: InvoiceStatus): Invoice {
-        return Invoice(invoice.id, invoice.customerId, invoice.amount, newStatus)
+    private fun updateInvoiceStatus(invoice: Invoice, status: InvoiceStatus): Invoice {
+        return Invoice(invoice.id, invoice.customerId, invoice.amount, status)
     }
 }
