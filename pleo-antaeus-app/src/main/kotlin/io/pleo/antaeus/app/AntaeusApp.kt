@@ -9,7 +9,7 @@ package io.pleo.antaeus.app
 
 import getPaymentProvider
 import io.pleo.antaeus.core.events.kafka.KafkaEventPublisher
-import io.pleo.antaeus.core.schedule.Scheduler
+import io.pleo.antaeus.core.schedule.JobScheduler
 import io.pleo.antaeus.core.services.BillingService
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
@@ -68,7 +68,7 @@ fun main() {
     // This is _your_ billing service to be included where you see fit
     val billingService = BillingService(paymentProvider, customerService, invoiceService, eventPublisher)
 
-    val scheduler = Scheduler(invoiceService, billingService)
+    val scheduler = JobScheduler(invoiceService, billingService)
 
     //Start scheduling
     scheduler.startScheduled()
@@ -77,7 +77,6 @@ fun main() {
     AntaeusRest(
         invoiceService = invoiceService,
         customerService = customerService,
-        billingService = billingService,
         scheduler = scheduler
     ).run()
 }

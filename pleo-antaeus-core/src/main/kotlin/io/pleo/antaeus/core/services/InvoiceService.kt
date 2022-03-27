@@ -9,7 +9,13 @@ import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 
+/*
+    Here I added a fetchAllPendingInvoices function that brings all the invoices that has the status PENDING,
+    this service should encapsulate all the possible logic to obtain them.
+ */
+
 class InvoiceService(private val dal: AntaeusDal) {
+
     fun fetchAll(): List<Invoice> {
         return dal.fetchInvoices()
     }

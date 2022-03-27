@@ -9,13 +9,18 @@ import mu.KotlinLogging
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 
-class InvoicePaymentJob(var billingService: BillingService? = null,
+/*
+    This Jobs receives the two services that we are going to use for charge invoice, we use a coroutine (chargePayment)
+    because calling billingService could have a high cost, and we don't want to block our process.
+ */
+class InvoiceBillingJob(var billingService: BillingService? = null,
                         var invoiceService: InvoiceService? = null) : Job {
 
     private val logger = KotlinLogging.logger {}
 
     override fun execute(context: JobExecutionContext?) {
-        if (billingService == null || invoiceService == null) return
+        if (billingService == null || invoiceService == null) throw IllegalArgumentException("Missing InvoiceBillingJob dependencies")
+
         logger.info { "Job starting:${context.toString()}" }
 
         val pendingInvoices = invoiceService!!.fetchAllPendingInvoices()
@@ -29,7 +34,7 @@ class InvoicePaymentJob(var billingService: BillingService? = null,
         logger.info { "Job finished" }
     }
 
-    private fun chargePayment(invoice : Invoice){
+    private suspend fun chargePayment(invoice : Invoice){
         billingService!!.charge(invoice)
     }
 }

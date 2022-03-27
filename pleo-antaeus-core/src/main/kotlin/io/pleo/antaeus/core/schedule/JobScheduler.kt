@@ -6,8 +6,15 @@ import org.quartz.*
 import org.quartz.impl.StdSchedulerFactory
 import java.time.LocalDateTime
 
+
+/*
+    This is the class to schedule our jobs, it should be instantiated on the main class of the service,
+    here we have two functions, one for scheduling the monthly payment and the other one to launch the job at the moment.
+ */
+
 private const val MONTHLY_CRON = "0 0 0 1 * ? *"
-class Scheduler(
+
+class JobScheduler(
     private val invoiceService: InvoiceService,
     private val billingService: BillingService
 ) {
@@ -24,7 +31,7 @@ class Scheduler(
     private fun job(jobName: String): JobDetail {
         return JobBuilder
             .newJob()
-            .ofType(InvoicePaymentJob::class.java)
+            .ofType(InvoiceBillingJob::class.java)
             .usingJobData(JobDataMap(mapOf("invoiceService" to invoiceService, "billingService" to billingService)))
             .withIdentity(jobName)
             .build()

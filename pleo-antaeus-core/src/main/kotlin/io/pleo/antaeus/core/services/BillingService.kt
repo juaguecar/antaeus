@@ -9,8 +9,16 @@ import io.pleo.antaeus.models.Customer
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.events.EventPublisher
+import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 
+/*
+    This service holds all the logic about charge a payment, it ensures there is no problem with the invoice
+    before calling payment provider to avoid unsuccessful calls, also has a eventPublisher that handles all
+    events generated in the process.
+    It is also important to note that every function here is a suspend function, this allows us to delay the calls
+    to the payment provider in case of a network error and not blocking the main process.
+ */
 
 class BillingService(
     private val paymentProvider: PaymentProvider,
@@ -22,11 +30,11 @@ class BillingService(
         const val MAX_RETRIES = 5
     }
 
-    fun charge(invoice: Invoice): Invoice {
+    suspend fun charge(invoice: Invoice): Invoice {
         if (invoiceIsAlreadyPaid(invoice)) return duplicatedPayment(invoice)
         val customer = findCustomer(invoice) ?: return customerNotFound(invoice)
         if (isCurrencyMismatch(customer, invoice)) return currencyMismatch(invoice)
-        return payInvoice(invoice)
+        return chargeInvoice(invoice)
     }
 
     private fun duplicatedPayment(invoice: Invoice): Invoice {
@@ -34,7 +42,7 @@ class BillingService(
         return invoice
     }
 
-    private fun payInvoice(invoice: Invoice): Invoice {
+    private suspend fun chargeInvoice(invoice: Invoice): Invoice {
         var retries = 0
         while (retries < MAX_RETRIES) {
             try {
@@ -49,8 +57,8 @@ class BillingService(
                 return currencyMismatch(invoice)
 
             } catch (e: NetworkException) {
+                delay(1000)
                 retries++
-                Thread.sleep(1000)
             }
         }
 
